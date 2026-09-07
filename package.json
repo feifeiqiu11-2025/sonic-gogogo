@@ -1,8 +1,10 @@
 {
   "name": "sonic-gogogo",
   "version": "0.3.0",
-  "private": true,
   "type": "module",
+  "license": "MIT",
+  "author": "Feifei Qiu",
+  "repository": "github:feifeiqiu11-2025/sonic-gogogo",
   "description": "Sonic Gogogo \u2014 Sonic, Tails & Knuckles. Body-controlled racing for 1\u20133 players.",
   "scripts": {
     "build": "node tools/build.mjs",
