@@ -1,0 +1,15 @@
+{
+  "name": "sonic-gogogo",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "description": "Sonic Gogogo \u2014 Sonic, Tails & Knuckles. Body-controlled racing for 1\u20133 players.",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "test": "node tools/build.mjs && node tools/simulate.mjs && MODE=2 node tools/simulate.mjs && MODE=3 node tools/simulate.mjs && FAST=0 SPEEDIN=0.4 node tools/simulate.mjs && MODE=3 INPUT=camera DESTINATION=aurora node tools/simulate.mjs && MODE=3 INPUT=camera DESTINATION=blossom node tools/simulate.mjs",
+    "serve": "npx --yes serve public -l 5173"
+  },
+  "devDependencies": {
+    "three": "0.160.0"
+  }
+}

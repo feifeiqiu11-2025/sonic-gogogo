@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sonic Gogogo · Sonic & Friends</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,600..900,50..100&family=Nunito:wght@500;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F7F0E2; --ink:#22211D; --mint:#8FD3BE; --mint-deep:#3E9C86; --gold:#E6B54A; --gold-deep:#B9862A;
+  --coral:#F2795B; --sea:#2E8FB6; --connor:#2275d0; --carter:#ce3348;
+  --shadow:0 18px 50px rgba(20,30,40,.35);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#0d1b26;color:var(--ink);font-family:Nunito,system-ui,sans-serif;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+#gl{position:fixed;inset:0;display:block}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;z-index:10}
+.screen[hidden]{display:none}
+
+/* ---------- Menu ---------- */
+#start{justify-content:flex-end;padding-bottom:5vh;background:linear-gradient(180deg,rgba(6,20,30,0) 0%,rgba(6,20,30,.15) 45%,rgba(6,20,30,.75) 100%)}
+.menu-head{position:absolute;top:5vh;left:0;right:0;text-align:center;color:#fff;text-shadow:0 3px 24px rgba(0,0,0,.45)}
+.eyebrow{font-weight:800;font-size:clamp(13px,1.6vw,18px);letter-spacing:.02em;color:var(--gold);margin-bottom:6px}
+.title{font-family:Fraunces,serif;font-variation-settings:"SOFT" 100,"opsz" 144;font-weight:900;font-size:clamp(40px,8vw,104px);line-height:.95;letter-spacing:-.02em}
+.title small{display:block;font-size:.34em;font-weight:700;letter-spacing:0;color:var(--mint);margin-top:10px}
+.panel{width:min(980px,100%);}
+.subtitle{font-family:Fraunces,serif;font-weight:700;font-size:clamp(20px,2.6vw,30px);color:#fff;text-align:center;margin-bottom:18px;text-shadow:0 2px 14px rgba(0,0,0,.5)}
+.cards{display:flex;gap:18px;justify-content:center;flex-wrap:wrap}
+.card{position:relative;display:flex;flex-direction:column;align-items:stretch;width:min(300px,44vw);min-height:150px;background:var(--paper);border-radius:22px;padding:16px 16px 14px;text-align:left;box-shadow:var(--shadow);transition:transform .15s ease,box-shadow .15s ease;border:4px solid transparent}
+.card:hover{transform:translateY(-4px)}
+.card:active{transform:scale(.98)}
+.card[aria-pressed="true"]{border-color:var(--gold);box-shadow:0 0 0 6px rgba(230,181,74,.25),var(--shadow)}
+.card .name{font-family:Fraunces,serif;font-weight:800;font-size:clamp(20px,2.4vw,28px);line-height:1.05}
+.card .trait{display:block;color:#5f5a4e;font-weight:700;font-size:15px;margin-top:4px}
+.card .cta{position:absolute;right:16px;bottom:14px;font-weight:900;font-size:14px;color:var(--mint-deep);background:rgba(143,211,190,.28);padding:6px 12px;border-radius:999px}
+.card[aria-pressed="true"] .cta{color:#5a3f05;background:var(--gold)}
+.card .figure{height:120px;display:flex;align-items:flex-end;justify-content:center;gap:12px;margin-bottom:8px}
+.card canvas{width:96px;height:120px;image-rendering:auto}
+.card.sonic .name{color:var(--connor)} .card.knuckles .name{color:var(--carter)} .card.zephyr .name{color:#2f6fd8} .card.ember .name{color:#e0452e}
+.cards.four .card{width:min(215px,44vw);min-height:120px} .cards.four .card .figure{height:104px} .cards.four canvas{width:84px;height:104px}
+.row{display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap}
+.btn{background:var(--gold);color:#3a2905;font-weight:900;font-size:clamp(17px,2vw,22px);padding:14px 34px;border-radius:999px;box-shadow:0 10px 26px rgba(230,181,74,.35);transition:transform .12s}
+.btn:hover{transform:translateY(-2px)} .btn:active{transform:scale(.97)} .btn:disabled{opacity:.45;cursor:default;transform:none;box-shadow:none}
+.btn.hold{position:relative;overflow:hidden} .btn.hold i{position:absolute;left:0;top:0;bottom:0;width:0%;background:rgba(255,255,255,.45);pointer-events:none;transition:width .1s linear} .btn.hold span{position:relative}
+.gesture{display:flex;align-items:center;gap:10px;margin-top:14px;color:rgba(255,255,255,.85);font-weight:800;font-size:15px} .gesture svg{width:34px;height:34px;flex:none;background:rgba(34,33,29,.7);border-radius:9px} .result .gesture{color:#5f5a4e;justify-content:center}
+.btn.quiet{background:rgba(255,255,255,.15);color:#fff;box-shadow:none;backdrop-filter:blur(6px)}
+.btn.big{font-size:clamp(22px,3vw,32px);padding:18px 54px}
+.stepper{display:flex;gap:8px;justify-content:center;margin-top:16px}
+.stepper li{list-style:none;width:44px;height:6px;border-radius:3px;background:rgba(255,255,255,.28)}
+.stepper li.on{background:var(--gold)}
+.readlink{position:absolute;bottom:18px;left:0;right:0;text-align:center;color:rgba(255,255,255,.75);font-weight:700;font-size:14px}
+.readlink a{color:var(--mint);text-decoration:none;border-bottom:2px solid rgba(143,211,190,.4)}
+.moves{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;width:min(900px,100%);margin-top:6px}
+.move{background:rgba(247,240,226,.92);border-radius:16px;padding:12px 12px 10px;display:flex;gap:10px;align-items:center}
+.move svg{width:44px;height:44px;flex:none}
+.move b{display:block;font-family:Fraunces,serif;font-size:17px;line-height:1.1}
+.move span{display:block;font-size:13px;color:#5f5a4e;font-weight:700;margin-top:2px}
+
+/* ---------- Setup ---------- */
+#setup{background:rgba(6,20,30,.72);backdrop-filter:blur(8px)}
+.setup-wrap{display:flex;gap:26px;align-items:center;flex-wrap:wrap;justify-content:center;width:min(1100px,100%)}
+.cam-frame{position:relative;width:min(560px,92vw);aspect-ratio:4/3;border-radius:24px;overflow:hidden;background:#111;box-shadow:var(--shadow);border:4px solid rgba(255,255,255,.12)}
+.cam-frame video,.cam-frame canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.cam-frame .ghost{position:absolute;inset:0;pointer-events:none}
+.setup-text{color:#fff;max-width:420px}
+.setup-text h2{font-family:Fraunces,serif;font-weight:800;font-size:clamp(26px,3.4vw,40px);line-height:1.05;margin-bottom:12px}
+.setup-text p{font-size:17px;line-height:1.5;color:rgba(255,255,255,.85);margin-bottom:10px}
+.status{display:inline-block;background:rgba(255,255,255,.12);padding:8px 14px;border-radius:999px;font-weight:800;margin:6px 0 14px}
+.status.ok{background:rgba(143,211,190,.3);color:var(--mint)}
+.keylink{color:rgba(255,255,255,.6);font-size:14px;font-weight:700;text-decoration:underline;margin-top:14px}
+
+/* ---------- HUD ---------- */
+#hud{position:fixed;inset:0;pointer-events:none;z-index:5;opacity:0;transition:opacity .4s}
+#hud.on{opacity:1}
+.hud-top{position:absolute;top:18px;left:22px;right:22px;display:flex;justify-content:space-between;align-items:flex-start}
+.rings{display:flex;align-items:center;gap:10px;background:rgba(20,30,40,.45);backdrop-filter:blur(8px);border-radius:999px;padding:8px 18px 8px 10px;color:#fff;font-family:Fraunces,serif;font-weight:800;font-size:clamp(22px,3vw,34px)}
+.rings.two{font-size:clamp(16px,2.2vw,24px);gap:14px} .rings.two em{font-style:normal;padding:2px 10px;border-radius:999px;background:rgba(255,255,255,.14)} .rings.two em.sonic{box-shadow:inset 0 0 0 2px var(--connor)} .rings.two em.knuckles{box-shadow:inset 0 0 0 2px var(--carter)}
+.speedo .rowname{display:inline-flex;align-items:center;gap:6px} .speedo .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.rings .coin{width:34px;height:34px;border-radius:50%;border:7px solid var(--gold);box-shadow:inset 0 0 0 2px #fff4c8,0 0 18px rgba(230,181,74,.7)}
+.timer{color:#fff;font-family:Fraunces,serif;font-weight:700;font-size:clamp(18px,2.3vw,26px);background:rgba(20,30,40,.45);backdrop-filter:blur(8px);border-radius:999px;padding:8px 18px}
+.speedo{position:absolute;right:22px;bottom:22px;width:min(260px,34vw);color:#fff}
+.speedo .bar{height:14px;border-radius:7px;background:rgba(255,255,255,.18);overflow:hidden;position:relative}
+.speedo .fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,var(--mint),var(--gold),var(--coral));border-radius:7px;transition:width .12s linear}
+.speedo .boost{margin-top:8px;height:8px;border-radius:4px;background:rgba(255,255,255,.18);overflow:hidden}
+.speedo .boost i{display:block;height:100%;width:0%;background:#7ff0ff;box-shadow:0 0 12px #7ff0ff;transition:width .2s}
+.speedo label{display:flex;justify-content:space-between;font-weight:800;font-size:14px;margin-bottom:6px;text-shadow:0 1px 6px rgba(0,0,0,.6)} .speedo .row2{margin-top:12px} .speedo .lead{color:var(--gold)}
+.prompt{position:absolute;left:50%;top:84px;transform:translate(-50%,0) scale(.7);opacity:0;display:flex;flex-direction:row;align-items:center;gap:14px;max-width:92vw;padding:10px 22px 10px 12px;border-radius:999px;background:rgba(20,30,40,.55);backdrop-filter:blur(8px);color:#fff;text-align:left;transition:transform .18s cubic-bezier(.2,1.6,.4,1),opacity .18s;white-space:nowrap}
+.prompt.on{opacity:1;transform:translate(-50%,0) scale(1)}
+.prompt svg{width:min(76px,12vw);height:min(76px,12vw);flex:none;background:rgba(34,33,29,.7);border-radius:18px}
+.prompt b{font-family:Fraunces,serif;font-weight:900;font-size:clamp(26px,4.6vw,54px);line-height:1;letter-spacing:-.02em;text-shadow:0 3px 0 rgba(0,0,0,.35)}
+.toast{position:absolute;left:50%;bottom:26vh;transform:translateX(-50%);color:#fff;font-family:Fraunces,serif;font-weight:900;font-size:clamp(26px,4.4vw,54px);opacity:0;transition:opacity .2s,transform .3s;text-shadow:0 4px 0 rgba(0,0,0,.35),0 10px 40px rgba(0,0,0,.5);white-space:nowrap}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(-16px)}
+.pip{position:absolute;left:22px;bottom:22px;width:min(230px,26vw);aspect-ratio:4/3;border-radius:18px;overflow:hidden;border:3px solid rgba(255,255,255,.35);background:#000;box-shadow:var(--shadow);transition:border-color .3s,box-shadow .3s}
+.pip.lost{border-color:#ff5a5a;box-shadow:0 0 0 4px rgba(255,90,90,.3),var(--shadow)}
+.pip.lost .tag{background:#c0392b}
+.pip canvas{width:100%;height:100%;transform:scaleX(-1)}
+.pip .tag{position:absolute;left:8px;top:8px;background:rgba(0,0,0,.5);color:#fff;font-size:12px;font-weight:800;padding:3px 8px;border-radius:999px}
+.count{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:Fraunces,serif;font-weight:900;font-size:clamp(90px,20vw,240px);color:#fff;text-shadow:0 8px 0 rgba(0,0,0,.3),0 20px 60px rgba(0,0,0,.6);opacity:0}
+.speedlines{position:absolute;inset:0;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,rgba(255,255,255,0) 45%,rgba(255,255,255,.18) 100%);mix-blend-mode:screen}
+.vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 55%,rgba(0,0,0,.35) 100%)}
+.p2tag{position:absolute;top:70px;color:#fff;font-weight:900;font-size:15px;background:rgba(20,30,40,.45);padding:4px 12px;border-radius:999px}
+.hint{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.85);font-weight:800;font-size:clamp(14px,1.8vw,18px);text-shadow:0 2px 10px rgba(0,0,0,.6);background:rgba(20,30,40,.35);padding:8px 16px;border-radius:999px}
+
+/* ---------- Results — a translucent card anchored low so the victory celebration stays visible behind it ---------- */
+#done{justify-content:flex-end;padding-bottom:3vh;background:linear-gradient(180deg,rgba(6,20,30,0) 45%,rgba(6,20,30,.55))}
+.result{background:rgba(247,240,226,.92);backdrop-filter:blur(10px);border-radius:28px;padding:22px 30px;width:min(720px,100%);box-shadow:var(--shadow);text-align:center}
+.result h2{font-family:Fraunces,serif;font-weight:900;font-size:clamp(34px,5vw,58px);line-height:1;color:var(--ink)}
+.result .sub{color:#5f5a4e;font-weight:700;margin:6px 0 20px;font-size:17px}
+.stats{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+.stat{background:#fff;border-radius:18px;padding:14px 20px;min-width:130px}
+.stat b{display:block;font-family:Fraunces,serif;font-size:clamp(28px,4vw,40px);font-weight:800;color:var(--sea)}
+.stat span{font-weight:800;color:#5f5a4e;font-size:13px}
+.board{display:flex;gap:14px;justify-content:center;flex-wrap:wrap} .col{background:#fff;border-radius:20px;padding:14px 16px;min-width:230px;flex:1;max-width:320px;text-align:left} .col h3{font-family:Fraunces,serif;font-size:22px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center} .col h3 .win{font-size:13px;background:var(--gold);color:#5a3f05;padding:4px 10px;border-radius:999px} .col .line{display:flex;justify-content:space-between;font-weight:800;color:#5f5a4e;font-size:14px;padding:5px 0;border-top:1px solid #eee} .col .line b{color:var(--sea);font-size:18px} .col.sonic h3{color:var(--connor)} .col.knuckles h3{color:var(--carter)}
+.stars{font-size:38px;letter-spacing:6px;color:var(--gold);margin:14px 0 4px;text-shadow:0 2px 0 rgba(0,0,0,.08)}
+@media (max-width:720px){.card{width:min(300px,86vw)}.pip{width:34vw}.speedo{width:38vw}}
+@media (prefers-reduced-motion:reduce){.card,.btn{transition:none}}
+
+/* Adventure edition: readable panels, live 3D cast, responsive layouts. */
+[hidden]{display:none!important}
+#loading{position:fixed;inset:0;background:#092b36;z-index:100;display:grid;place-content:center;text-align:center;color:#f5d596;font-size:14px;letter-spacing:.14em}#loading span{display:block;color:white;font:700 42px Fraunces,serif;letter-spacing:-.04em;margin-top:18px}
+#start{justify-content:center;align-items:flex-end;padding:72px 5vw 58px;background:linear-gradient(90deg,rgba(5,28,36,.91),rgba(5,28,36,.60) 39%,rgba(5,28,36,.16) 75%),linear-gradient(0deg,rgba(5,28,36,.8),transparent 45%);overflow:auto}
+.menu-head{position:absolute;top:23%;left:5vw;right:auto;width:39%;text-align:left}.eyebrow{font-size:11px;letter-spacing:.18em;color:#f9d98f;margin-bottom:26px}.eyebrow span{margin:0 10px}.title{font-size:clamp(48px,6.8vw,106px);letter-spacing:-.055em;line-height:.94}.title em{font-style:normal;color:#f9d98f}.hero-copy{font-size:16px;line-height:1.6;margin:24px 0;color:#deefeb}.hero-badges{display:flex;gap:8px}.hero-badges span{font-size:9px;letter-spacing:.12em;padding:8px 10px;border:1px solid #ffffff35;border-radius:6px}
+.panel{width:51%;max-width:860px;position:relative}.subtitle{text-align:left;font-family:Nunito,sans-serif;font-size:23px;letter-spacing:-.02em;margin-bottom:20px}.cards{gap:12px;flex-wrap:nowrap}.card{width:auto;flex:1;min-width:0;padding:18px 14px 54px;border:1px solid #ffffff50;border-radius:20px;background:linear-gradient(145deg,#fffaf0,#e3ece1);box-shadow:0 14px 40px #001e3440}.card .name{font-family:Nunito,sans-serif;font-size:19px;line-height:1.2;font-weight:900}.card .trait{font-size:12px;line-height:1.4;margin-top:9px;color:#526464}.card .figure{height:155px;margin:-8px -8px 12px;align-items:center;gap:0}.card canvas{width:112px;height:150px;object-fit:contain;min-width:0}.mode-card[data-mode="2"] canvas{width:50%}.mode-card[data-mode="3"] canvas{width:32%}.mode-number{font-size:10px;letter-spacing:.2em;color:#5b847b;margin-bottom:8px}.card .cta{font-size:11px;bottom:16px;right:14px;padding:6px 12px}.card:hover{transform:translateY(-7px);border-color:#ffd77d}.card[aria-pressed="true"]{border-color:#e5b252;box-shadow:0 0 0 2px #e5b25266,0 16px 40px #001e3440}.menu-note{font-size:12px;color:#d4e7df;text-align:center;margin:22px 0 0}.stepper{margin-top:24px}.stepper li{height:3px;width:30px}.readlink{font-size:10px;letter-spacing:.08em;bottom:20px}.btn{font-size:15px;padding:13px 24px;border-radius:12px;background:#f6d18a;box-shadow:0 7px 22px #00151b22}.btn.quiet{border:1px solid #ffffff33;background:#ffffff14}.row{margin-top:18px;gap:10px}.card.ninja-card .figure{height:210px}.card.ninja-card canvas{width:158px;height:205px}.card.ninja-card .name{font-size:22px}
+#start[data-step="3"] .menu-head{top:29%}#start[data-step="3"] .title{font-size:clamp(45px,5.5vw,80px)}.destinations{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.destinations button{background:#102e3bcf;color:#fff;border:1px solid #ffffff40;border-radius:14px;text-align:left;padding:7px 7px 12px;overflow:hidden}.destinations button[aria-pressed="true"]{border-color:#f6d18a;box-shadow:0 0 0 2px #f6d18a40}.destination-art{display:block;height:65px;border-radius:8px;overflow:hidden}.destination-art svg{width:100%;height:100%;display:block}.tour{background:radial-gradient(ellipse at 30% 140%,#ecc877 40%,transparent 41%),linear-gradient(145deg,#53c6e4,#087887)}.aurora{background:linear-gradient(140deg,#1b315f,#51bda9,#493f97)}.blossom{background:linear-gradient(140deg,#58466e,#e793b2,#f4c9a1)}.destinations b,.destinations small{display:block;padding:7px 3px 0}.destinations b{font-size:13px}.destinations small{font-size:10px;color:#c5dcdf;padding-top:2px}.control-label{color:#f4d68e;font-size:10px;letter-spacing:.14em;margin:20px 0 8px}.control-label span{float:right;letter-spacing:0;color:#abc8cd}.moves{grid-template-columns:repeat(3,1fr);gap:2px 16px;background:#0d2a37b0;border:1px solid #ffffff1f;border-radius:12px;padding:10px 14px}.move{padding:5px 0;border-radius:0;background:none;cursor:default;gap:8px}.move svg{width:28px;height:28px}.move b{font:800 12px Nunito,sans-serif;color:#fff}.move span{font-size:9px;line-height:1.35;color:#a9c6cb}#keyboardGuide{font-size:10px;color:#d0e1e2;line-height:1.7;margin-top:10px}
+.game-controls{position:fixed;right:24px;top:82px;z-index:20}.game-controls button{color:#fff;background:#102d3bba;padding:9px 14px;border:1px solid #ffffff30;border-radius:10px;font-size:12px}#pausePanel{z-index:30;background:#092535bb;backdrop-filter:blur(12px)}#pausePanel .eyebrow{color:#597c79;margin-bottom:18px}#pausePanel .quiet{color:#345352}.hud-top{gap:12px}.rings,.timer{border:1px solid #ffffff30;background:#0c293cc9;border-radius:14px;font-family:Nunito,sans-serif;font-size:22px}.rings.two{font-size:14px}.rings.two em{padding:3px 7px}.course-status{position:absolute;left:50%;transform:translateX(-50%);width:210px;text-align:center;background:#0c293cc9;border:1px solid #ffffff25;color:#fff;padding:9px 14px;border-radius:12px;font-size:12px}.course-line{height:3px;background:#ffffff30;margin:6px 0 3px;border-radius:2px;overflow:hidden}.course-line i{display:block;height:100%;background:#f6d18a;width:0}.course-status small{font-size:9px;color:#c8e0e6}.speedo{padding:16px;background:#0c293ccb;backdrop-filter:blur(8px);border:1px solid #ffffff25;border-radius:16px;width:230px}.speedo .bar{height:6px}.speedo label{font-size:11px}.speedo .boost{height:3px}.speedo .row2{margin-top:13px}.prompt{top:110px}.prompt b{font:900 28px Nunito,sans-serif}.prompt svg{width:42px;height:42px}.hint{bottom:24px;font-size:12px;max-width:40vw;text-align:center;white-space:normal}.result{max-height:64vh;overflow:auto;width:min(900px,94vw);max-width:100%}.col{min-width:180px}.rings.two em.tails{box-shadow:inset 0 0 0 2px #55c7e4}
+@media(max-width:1050px){.menu-head{width:34%;top:25%}.panel{width:60%}.title{font-size:7vw}.hero-copy{font-size:13px}.hero-badges{flex-wrap:wrap}.card .name{font-size:16px}.card canvas{width:90px}.course-status{top:60px;width:160px}.prompt{top:140px}}
+@media(max-width:720px){#start{display:block;padding:30px 20px 65px;background:linear-gradient(180deg,#082a36e0,#082a3670 60%,#082a36e8)}.menu-head,#start[data-step="3"] .menu-head{position:relative;width:100%;top:auto;left:auto;margin-bottom:26px}.eyebrow{font-size:9px;margin-bottom:16px}.title,#start[data-step="3"] .title{font-size:52px}.title br{display:none}.title em{display:block}.hero-copy{margin:12px 0;font-size:13px}.hero-badges{display:none}.panel{width:100%}.subtitle{font-size:20px}.cards{gap:8px}.card{width:auto;padding:10px 10px 46px;border-radius:14px}.card .figure{height:110px;margin-bottom:6px}.card canvas{width:75px;height:110px}.card .name{font-size:14px}.card .trait{font-size:10px}.readlink{position:relative;bottom:auto;margin-top:24px;line-height:1.6}.card.ninja-card .figure{height:145px}.card.ninja-card canvas{height:150px}.menu-note{font-size:10px}.card.ninja-card .name{font-size:18px}.hud-top{left:10px;right:10px;top:10px}.rings.two{font-size:10px;gap:4px;padding:8px}.rings .coin{width:22px;height:22px;border-width:5px}.rings.two em{padding:3px}.timer{font-size:16px;padding:8px}.course-status{top:45px}.speedo{width:150px;right:10px;bottom:10px;padding:10px}.pip{left:10px;bottom:10px;width:130px}.hint{bottom:165px;max-width:90vw;width:max-content;font-size:10px}.game-controls{right:10px;top:100px}.prompt b{font-size:20px}.prompt{top:150px}.toast{font-size:25px;white-space:normal;text-align:center;width:90vw}.setup-text p{font-size:14px}.screen{overflow:auto;padding:18px}.cam-frame{max-width:320px}.setup-wrap{gap:14px}}
+@media(max-height:650px) and (min-width:721px){#start{padding-top:25px;padding-bottom:35px}.menu-head{top:20%}.card .figure{height:110px}.card canvas{height:110px}.card.ninja-card .figure{height:140px}.card.ninja-card canvas{height:145px}.destinations .destination-art{height:40px}.control-label{margin-top:10px}.stepper{margin-top:12px}.readlink{bottom:10px}}
+.card.tails .name{color:#a26c13}.rings.two em.tails{box-shadow:inset 0 0 0 2px #ffd06d}
+
+.view-options{display:flex;align-items:center;gap:8px;color:#c8e0df;font-size:10px;margin-top:12px}.view-options>span{letter-spacing:.1em;margin-right:auto}.view-options button{padding:7px 9px;border:1px solid #ffffff30;border-radius:7px}.view-options button[aria-pressed="true"]{color:#f6d18a;border-color:#f6d18a}
+#splitLabels{position:absolute;inset:0;display:flex;pointer-events:none}.split-label{flex:1;min-width:0;border-right:2px solid #edf5ff80;padding:155px 14px 0;position:relative}.split-label:last-child{border:0}.split-label span{display:inline-flex;gap:8px;align-items:center;background:#081f38db;color:white;font-size:13px;font-weight:900;padding:8px 12px;border-radius:9px;border-left:3px solid var(--racer)}.split-label small{display:block;font-size:10px;color:#c7dce7;margin-top:4px}.split-label b{color:var(--racer)}
+@media(max-width:720px),(max-aspect-ratio:1/1){#splitLabels{flex-direction:column}.split-label{border-right:0;border-bottom:2px solid #edf5ff80;padding:10px}.split-label:first-child{padding-top:155px}.split-label span{font-size:11px;padding:5px 9px}.split-label small{font-size:9px}.view-options{flex-wrap:wrap}}
+
+.speedo.split{left:12px;right:12px;bottom:12px;width:auto;background:none;border:0;backdrop-filter:none;padding:0;display:grid;grid-template-columns:repeat(var(--players),1fr);gap:24px}.speedo.split>div{background:#0b2544cf;border:1px solid #ffffff35;border-radius:12px;padding:12px;margin:0}.speedo.split label{font-size:12px}.speedo.split .boost{margin-top:6px}
+#hud[data-input="camera"] .pip{left:auto;right:22px;bottom:150px;width:200px}
+@media(max-width:720px),(max-aspect-ratio:1/1){.speedo.split{inset:0;display:block;pointer-events:none}.speedo.split>div{position:absolute;right:10px;width:145px;padding:8px;bottom:calc(100% / var(--players) * (var(--players) - 1) + 10px)}.speedo.split>div:nth-child(2){bottom:calc(100% / var(--players) * (var(--players) - 2) + 10px)}.speedo.split>div:nth-child(3){bottom:10px}.speedo.split label{font-size:10px}#hud[data-input="camera"] .pip{width:100px;left:10px;right:auto;bottom:10px}#hud[data-input="camera"] .split-label{padding-top:10px}#hud[data-input="camera"] .split-label:first-child{padding-top:155px}}
+</style>
+</head>
+<body>
+<script>
+addEventListener('error',()=>{const el=document.getElementById('loading');if(el&&!el.hidden){el.textContent='The game could not load. Check your connection and reload.';}});
+</script>
+<canvas id="gl"></canvas>
+<div id="loading" role="status">Building your adventure<span>Sonic Gogogo</span></div>
+<nav class="game-controls" id="raceControls" hidden><button id="pauseBtn" aria-label="Pause game">Ⅱ Pause</button></nav>
+<section class="screen" id="pausePanel" hidden><div class="result"><div class="eyebrow">TAKE A BREATHER</div><h2>Adventure paused</h2><p class="sub">Your race will be right here. Raise both arms to resume when using the camera.</p><div class="row"><button class="btn" id="resumeBtn">Keep running</button><button class="btn quiet" id="exitBtn">Main menu</button></div></div></section>
+
+<!-- ===== HUD ===== -->
+<div id="hud">
+  <div class="vignette"></div>
+  <div id="splitLabels" hidden></div><div class="speedlines" id="speedlines"></div>
+  <div class="hud-top">
+    <div class="rings" id="ringsBox"><i class="coin"></i><span id="ringCount">0</span></div>
+    <div class="course-status"><span id="zoneName">Coral Coast</span><div class="course-line"><i id="progressFill"></i></div><small id="raceProgress">0%</small></div><div class="timer" id="timer">0:00.0</div>
+  </div>
+  <div class="prompt" id="prompt"><svg id="promptIcon" viewBox="0 0 100 100"></svg><b id="promptText">JUMP!</b></div>
+  <div class="toast" id="toast"></div>
+  <div class="pip" id="pip"><canvas id="pipCanvas" width="320" height="240"></canvas><span class="tag" id="pipTag">Camera</span></div>
+  <div class="speedo" id="speedo"></div>
+  <div class="count" id="count"></div>
+  <div class="hint" id="hint" hidden></div>
+</div>
+
+<!-- ===== Menu ===== -->
+<section class="screen" id="start">
+  <header class="menu-head">
+    <div class="eyebrow">SONIC <span>✦</span> TAILS <span>✦</span> KNUCKLES</div>
+    <h1 class="title">Sonic<br><em>Gogogo</em></h1><p class="hero-copy">Three heroes. One epic race.<br>Run, jump, and race through a world of wonder.</p><div class="hero-badges"><span>1–3 PLAYERS</span><span>BODY OR KEYBOARD</span></div>
+  </header>
+  <div class="panel" id="panel1">
+    <div class="subtitle">Your adventure starts here</div>
+    <div class="cards">
+      <button class="card mode-card" data-mode="1" aria-pressed="false"><div class="figure"><canvas data-fig="sonic" width="192" height="240"></canvas></div><span class="mode-number">01</span><span class="name">Solo adventure</span><span class="trait">Solo run along the coast</span><span class="cta">Choose</span></button>
+      <button class="card mode-card" data-mode="2" aria-pressed="false"><div class="figure"><canvas data-fig="sonic" width="192" height="240"></canvas><canvas data-fig="knuckles" width="192" height="240"></canvas></div><span class="mode-number">02</span><span class="name">Duo race</span><span class="trait">Race side by side</span><span class="cta">Choose</span></button>
+      <button class="card mode-card" data-mode="3" aria-pressed="false"><div class="figure"><canvas data-fig="sonic" width="192" height="240"></canvas><canvas data-fig="tails" width="192" height="240"></canvas><canvas data-fig="knuckles" width="192" height="240"></canvas></div><span class="mode-number">03</span><span class="name">Trio showdown</span><span class="trait">Three friends. One finish line.</span><span class="cta">Race →</span></button>
+    </div><p class="menu-note">Pick your crew. Find your pace. Make it an adventure.</p>
+    <ol class="stepper"><li class="on"></li><li></li><li></li></ol>
+  </div>
+  <div class="panel" id="panel2" hidden>
+    <div class="subtitle" id="pickTitle">Choose your hero</div>
+    <div class="cards" id="soloCards">
+<button class="card ninja-card tails" data-hero="tails" aria-pressed="false"><div class="figure"><canvas data-fig="tails" width="192" height="240"></canvas></div><span class="name">Tails</span><span class="trait">Twin-tailed fox · born to explore</span><span class="cta">Pick</span></button>
+      <button class="card ninja-card sonic" data-hero="sonic" aria-pressed="true"><div class="figure"><canvas data-fig="sonic" width="192" height="240"></canvas></div><span class="name">Sonic</span><span class="trait">Blue blur · fearless speedster</span><span class="cta">Pick</span></button>
+      <button class="card ninja-card knuckles" data-hero="knuckles" aria-pressed="false"><div class="figure"><canvas data-fig="knuckles" width="192" height="240"></canvas></div><span class="name">Knuckles</span><span class="trait">Powerhouse · ready for adventure</span><span class="cta">Pick</span></button>
+    </div>
+    <div class="row"><button class="btn quiet" id="back2">Back</button><button class="btn" id="next2">Next</button></div>
+    <ol class="stepper"><li class="on"></li><li class="on"></li><li></li></ol>
+  </div>
+  <div class="panel" id="panel3" hidden>
+    <div class="subtitle">Choose your world</div>
+    <div class="destinations" role="group" aria-label="Race destination">
+      <button data-destination="tour" aria-pressed="true"><span class="destination-art tour"><svg viewBox="0 0 120 65" aria-hidden="true"><circle cx="96" cy="16" r="9" fill="#fff4c9"/><path d="M-4 44 A46 46 0 0 1 88 44" fill="none" stroke="#ff5a5a" stroke-width="3" opacity=".85"/><path d="M1 44 A41 41 0 0 1 83 44" fill="none" stroke="#ffd23a" stroke-width="3" opacity=".85"/><path d="M6 44 A36 36 0 0 1 78 44" fill="none" stroke="#4fe36b" stroke-width="3" opacity=".85"/><path d="M11 44 A31 31 0 0 1 73 44" fill="none" stroke="#3ac6ff" stroke-width="3" opacity=".85"/><path d="M0 65 L34 40 Q42 34 50 40 L120 65 Z" fill="#2c8a5e"/><circle cx="86" cy="48" r="13" fill="none" stroke="#f6d18a" stroke-width="4"/><path d="M73 61 H120" stroke="#f6d18a" stroke-width="4"/></svg></span><b>Grand adventure</b><small>All seven worlds · the classic full course</small></button>
+      <button data-destination="aurora" aria-pressed="false"><span class="destination-art aurora"><svg viewBox="0 0 120 65" aria-hidden="true"><path d="M0 26 Q20 8 38 22 T78 18 T120 24 L120 2 L0 2 Z" fill="#75efd0" opacity=".4"/><path d="M0 34 Q26 14 52 28 T120 30" fill="none" stroke="#b2a1ef" stroke-width="6" opacity=".55"/><circle cx="20" cy="10" r="1.6" fill="#fff"/><circle cx="64" cy="7" r="1.3" fill="#fff"/><circle cx="102" cy="12" r="1.6" fill="#fff"/><path d="M18 65 L26 38 L34 65 Z" fill="#9ef5ee"/><path d="M32 65 L38 46 L44 65 Z" fill="#c9f7f2" opacity=".9"/><path d="M78 65 L87 34 L96 65 Z" fill="#9ef5ee"/><path d="M0 61 H120" stroke="#bde8ef" stroke-width="4" opacity=".7"/></svg></span><b>Aurora dream</b><small>Icy road · slippery steering, dodge the crystals</small></button>
+      <button data-destination="blossom" aria-pressed="false"><span class="destination-art blossom"><svg viewBox="0 0 120 65" aria-hidden="true"><path d="M56 65 Q54 44 48 36" fill="none" stroke="#755769" stroke-width="6" stroke-linecap="round"/><circle cx="42" cy="26" r="14" fill="#f8b8cb"/><circle cx="60" cy="20" r="12" fill="#ffd6d7"/><circle cx="30" cy="34" r="9" fill="#ffd6d7"/><circle cx="72" cy="30" r="9" fill="#f8b8cb"/><ellipse cx="94" cy="30" rx="5" ry="7" fill="#ffcc7a"/><path d="M94 20 v4" stroke="#a8825b" stroke-width="2"/><ellipse cx="108" cy="40" rx="4" ry="5.6" fill="#ffcc7a"/><circle cx="14" cy="14" r="2.2" fill="#f8b8cb"/><circle cx="88" cy="8" r="1.8" fill="#ffd6d7"/><circle cx="22" cy="50" r="1.8" fill="#f8b8cb"/><path d="M0 61 H120" stroke="#f4c9a1" stroke-width="4" opacity=".8"/></svg></span><b>Blossom festival</b><small>Lantern gates boost you · petal breeze drifts you</small></button>
+    </div><div class="control-label">MOVE TO PLAY <span>or use your keyboard</span></div>
+    <div class="moves" id="moves"></div>
+    <div class="view-options" id="viewOptions"><span>RACE CAMERA</span><button data-view="split" aria-pressed="true">Each player’s view</button><button data-view="shared" aria-pressed="false">Shared view</button></div><div id="keyboardGuide">P1 · W A S D / Q boost / E balance / Shift sprint<br>P2 · I J K L / U boost / O balance / H sprint<br>P3 · Arrow keys / Enter boost / slash balance / period sprint</div><div class="row"><button class="btn quiet" id="back3">Back</button><button class="btn quiet" id="keyboardPlay">Keyboard instead</button><button class="btn" id="playBtn">Turn on camera →</button></div>
+    <ol class="stepper"><li class="on"></li><li class="on"></li><li class="on"></li></ol>
+  </div>
+  <div class="readlink">SONIC GOGOGO · SONIC & FRIENDS · LOCAL MULTIPLAYER</div>
+</section>
+
+<!-- ===== Camera setup ===== -->
+<section class="screen" id="setup" hidden>
+  <div class="setup-wrap">
+    <div class="cam-frame"><video id="video" playsinline muted autoplay></video><canvas id="setupCanvas" width="640" height="480"></canvas><svg class="ghost" viewBox="0 0 640 480" id="ghost"></svg></div>
+    <div class="setup-text">
+      <h2 id="setupTitle">Let the camera see you</h2>
+      <p id="setupText">No clicking needed — as soon as the camera spots every player, the race starts by itself. More room is better: if the camera can see your knees, running in place is detected more accurately.</p>
+      <div class="status" id="status">Starting camera…</div>
+      <div class="row" style="justify-content:flex-start"><button class="btn quiet" id="backSetup">Back</button><button class="btn hold" id="goBtn" disabled hidden><i id="goFill"></i><span>Start anyway</span></button></div>
+      <button class="keylink" id="keysBtn">No camera? Play with the keyboard</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Results ===== -->
+<section class="screen" id="done" hidden>
+  <div class="result">
+    <h2 id="doneTitle">Coast cleared!</h2>
+    <div class="sub" id="doneSub">The heroes made it to the lighthouse.</div>
+    <div class="stars" id="stars">★★★</div>
+    <div id="scoreboard"></div>
+    <div class="row"><button class="btn hold" id="againBtn"><i id="againFill"></i><span>Run it again</span></button><button class="btn quiet" id="menuBtn" style="color:var(--ink);background:rgba(0,0,0,.08)">Main menu</button></div>
+    <div class="gesture" id="againGesture" hidden><svg viewBox="0 0 100 100" id="againGestureIcon"></svg>Raise both arms to run again</div>
+  </div>
+</section>
