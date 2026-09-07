@@ -145,7 +145,7 @@ const portraitCanvases=[...document.querySelectorAll('canvas[data-fig]')];
 if(portraitCanvases.length){
   const pr=new THREE.WebGLRenderer({alpha:true,antialias:true,preserveDrawingBuffer:true});pr.setSize(256,320);pr.setPixelRatio(1);pr.toneMapping=THREE.ACESFilmicToneMapping;pr.toneMappingExposure=1.25;pr.outputColorSpace=THREE.SRGBColorSpace;
   const ps=new THREE.Scene();ps.add(new THREE.HemisphereLight(0xeaf7ff,0x8b7763,2));const keyLight=new THREE.DirectionalLight(0xffecd0,3);keyLight.position.set(-3,5,4);ps.add(keyLight);const rim=new THREE.DirectionalLight(0x8cdce8,2);rim.position.set(3,3,-2);ps.add(rim);
-  const pc=new THREE.PerspectiveCamera(31,.8,.1,30);pc.position.set(0,1.25,4.4);pc.lookAt(0,1.08,0);
+  const pc=new THREE.PerspectiveCamera(33,.8,.1,30);pc.position.set(0,1.28,4.6);pc.lookAt(0,1.12,0); // framed so ears and tails clear the render edges
   const portraitRigs={},portraitsByKey={};
   for(const key of ['sonic','tails','knuckles']){portraitRigs[key]=buildRunner(key);portraitsByKey[key]=portraitCanvases.filter(c=>c.dataset.fig===key);}
   function posePortrait(key,t){ const rig=portraitRigs[key],R=rig.userData.rig; const ph=t*6.5+({sonic:0,tails:2.1,knuckles:4.2})[key]; const s1=Math.sin(ph),s2=Math.sin(ph+Math.PI);
