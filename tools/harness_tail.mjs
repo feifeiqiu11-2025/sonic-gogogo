@@ -5,7 +5,7 @@ handlers['keysBtn']();
 S.phase='run'; runStart=now();if(process.env.INPUT==='camera')S.input='camera';S.destination=process.env.DESTINATION||'tour';
 KEY.fast=FAST; const dt=1/60; let lastSeg=null; const log=[];
 function step(){ fakeNow+=dt; const q=rafQ.splice(0); for(const f of q) f(); }
-for(let i=0;i<60*200;i++){
+for(let i=0;i<60*280;i++){
   const p=players[0]; const seg=segAt(p.t);
   if(seg!==lastSeg){ log.push(`t=${fakeNow.toFixed(1)}s ${seg.type}/${seg.meta.name||''} at ${p.t.toFixed(0)} spd ${p.speed.toFixed(1)} h ${p.h.toFixed(1)} lane ${p.lane.toFixed(1)} rings ${p.rings} st ${p.state}`+(players[1]?` | P2 t ${players[1].t.toFixed(0)} lane ${players[1].lane.toFixed(1)}`:'')); lastSeg=seg; }
   if((seg.meta.name==='ramp1'||seg.meta.name==='ramp2') && seg.t1-p.t<2 && !p.air) KEY.jumpEdge=true;
@@ -13,6 +13,8 @@ for(let i=0;i<60*200;i++){
   KEY.up = seg.type==='gap' || seg.meta.name==='sprint2'; KEY.out = seg.type==='rail'; KEY.squat = (seg.meta.name==='ruins' && p.speed>14) || (seg.meta.name==='start' && p.speed<9 && fakeNow>1);
   KEY.l = seg.type==='wall' || (seg.meta.name==='cave' && p.t%40<20); KEY.r = seg.meta.name==='cave' && p.t%40>=20;
   if(S.input==='camera')bodies.forEach((b,i)=>Object.assign(b,{seen:true,speedIn:[.15,.55,1][i],lean:0,jumpEdge:false,squat:false,armsUp:false,armsOut:segAt(players[i].t).type==='rail'}));
+  // Deliberate discrete attacks only after capture; no progress while waiting.
+  for(const racer of players)if(racer.encounter?.type==='combat'&&i%30===0){const attack=racer.encounter.punches<3?'punchEdge':'kickEdge';(S.input==='camera'?combatSignals[racer.idx]:KEYS[racer.idx])[attack]=true;}
   step();
   if(S.phase==='done'){ log.push('DONE at '+fakeNow.toFixed(1)+'s'); break; }
 }

@@ -29,6 +29,8 @@ Body signals (knee lift, ankle alternation, torso bounce, arm pumping) feed an a
 | Lean left / right | Steer |
 | Arms straight out | Balance on the sky rails |
 | Both arms up | Boost (recharges as you run), or glide from a big jump |
+| Chest-height punch, then retract | One punch during a cheetah showdown |
+| Lift knee, extend foot, then put it down | One kick during a cheetah showdown |
 
 ### Keyboard fallback
 
@@ -38,15 +40,25 @@ Body signals (knee lift, ankle alternation, torso bounce, arm pumping) feed an a
 | P2 | J / L | I | K | U | O | H |
 | P3 | Arrows | Up | Down | Enter | / | . |
 
-Escape pauses. When using the camera, raise both arms to resume or to run again from the results screen.
+Combat keyboard controls: P1 **F / G**, P2 **N / M**, P3 **[ / ]** (punch / kick).
 
-## Worlds
+Escape pauses in a compact panel while keeping the frozen race visible. When using the camera, raise both arms to resume or to run again from the results screen.
 
-Each world is a genuinely different race, not just a palette swap:
+## Adventure maps
 
-- **Grand adventure** — the classic course through all seven zones: coral coast, rainbow sky rails, a giant loop and corkscrew, jungle ruins, a collapsing bridge, a space run, and a sunset sprint to the lighthouse.
-- **Aurora dream** — an icy road with slippery steering, crystal hazards you must jump or roll through, crystal-slalom ring lines, extra drone patrols, falling snow, and a slower dreamy soundtrack.
-- **Blossom festival** — lantern gates that grant a glow boost, a petal breeze that drifts the racers, petal ring arcs, extra dash pads to keep the pace up, drifting petals, and a faster festival soundtrack.
+Every map mixes coast/ocean, forest, desert, sky rails, loops, and space. The routes differ in geometry, section order, and encounters:
+
+- **Spooky Forest** (formerly Wildwood Rush): winding forest-first expedition, two chase opportunities, desert ambushes, rainbow rails, then loop and space sections.
+- **Mysterious Pyramid** (formerly Temple Twist): desert-first switchbacks, extra mummies, an early loop, one forest chase, space, then a rainbow-rail finale.
+- **Space Travel** (formerly Starlight Safari): early space section, longer rails and forest stretches, two chase opportunities, desert ambushes, then the final loop.
+
+Mummies emerge ahead of each racer. Lean around them; contact caps speed for 1.6 seconds. Cheetahs visibly chase: run fast enough to escape or, if caught, stop and land **three punches AND three kicks** to resume. Each player has independent progress and combat counters. Other racers keep moving.
+
+The desert and space sections now include cover-inspired scenery: stepped temple ruins, glowing turquoise carvings, torch flames, rainbow roads, floating crystal platforms, and a ringed planet.
+
+Every replay remixes encounter positions using one shared seed, so each racer gets the same challenge blueprint. There is no hidden catch-up boost.
+
+**Artwork/naming proposals** live separately at `/previews/`: Rainbow Rally, Twist & Dash, and Skyline Sprint. These illustrated concepts have not replaced the playable menu names or route diagrams. The illustrated shapes are not exact track diagrams.
 
 ## Getting started
 
@@ -56,7 +68,7 @@ npm run build
 npm run serve
 ```
 
-Open http://localhost:5173. Camera play needs a well-lit room with your shoulders, hips, and ideally knees in frame. Once every player is spotted, the race starts by itself.
+Open http://localhost:5173. Camera play needs a well-lit room with your shoulders, hips, and both feet in frame for combat. Once every player is spotted, the race starts by itself.
 
 ## Testing
 
@@ -64,7 +76,7 @@ Open http://localhost:5173. Camera play needs a well-lit room with your shoulder
 npm test
 ```
 
-The suite builds the game, then drives six full headless run-throughs of the course with a scripted bot (no browser or GPU needed): solo sprint, two- and three-player keyboard races, a slow-jog run that proves the big jumps stay clearable, and three-player body-input races through both alternate worlds. Assertions cover race completion, finite physics state, independent per-player input, sticky pose identities when detections reorder or drop out, pause-timer correctness, and that a faster body pace always finishes ahead of a slower one. See [QA.md](QA.md) for details.
+The suite builds the game, then drives seven full headless run-throughs of the course with a scripted bot (no browser or GPU needed): solo sprint, two- and three-player keyboard races, a slow-jog run that proves the big jumps stay clearable, and three-player body-input races through all three adventure maps. Assertions cover race completion, finite physics state, independent per-player input, sticky pose identities when detections reorder or drop out, pause-timer correctness, and that a faster body pace always finishes ahead of a slower one. The suite also checks exact preservation of the calibrated Body/StepSignal algorithms, gesture recognition at 15/30/60 fps, seeded encounter fairness, slowdown duration, independent capture and the three-punch/three-kick requirement. See [QA.md](QA.md) for details.
 
 ## Project structure
 
@@ -75,6 +87,7 @@ src/            Source, concatenated in numeric order into public/index.html
   3_world.js    Track spline builder, road geometry, renderer, sky and ocean
   4_zones.js    Zone atmospheres and the two alternate-world variants
   5_chars.js    Procedural character rigs, animation, live menu portraits
+  5_encounters.js Per-player mummies, cheetahs, combat, route previews
   6_game.js     Physics, collectibles, race flow, cameras, celebration
 tools/
   build.mjs     Concatenates src/ into public/index.html and syntax-checks it

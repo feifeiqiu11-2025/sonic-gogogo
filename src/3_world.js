@@ -1,3 +1,5 @@
+function createAdventure(mapKey){
+let disposed=false;const adventureDisposers=[];
 
 /* =====================================================================
    TRACK — turtle builder → dense polyline → parallel-transport frames
@@ -24,51 +26,27 @@ class Turtle {
     for(let i=1;i<=n;i++){ const u=i/n; const ang=total*smoothstep(0,1,u); this.yaw+=ang-prev; prev=ang; const f=this.fwdDir(); this.pos.x+=f.x*len/n; this.pos.z+=f.z*len/n;
       const k=smoothstep(0,.26,u)*smoothstep(1,.74,u); this.pos.y+=0; this.push(side*k*Math.PI/2*.92); } this.end(); }
 }
-function buildTrack(){
-  const T=new Turtle(); T.pos.set(0,118,0); T.yaw=0; T.push();
-  // 1 · cliffside opening — a plateau overlooking the sea, then the plunge
-  T.straight(60,-2,'road',{name:'start'});
-  T.turn(-30,60,-16);
-  // 2 · long downhill acceleration
-  T.straight(120,-52,'road',{name:'downhill'});
-  T.turn(45,80,-18,'road',{name:'dash'});
-  T.straight(50,-6);
-  // 3 · giant loop + corkscrew
-  T.straight(24,0,'road',{name:'preloop'});
-  T.loop(17);
-  T.straight(30,-2);
-  T.corkscrew(110,7);
-  T.straight(30,-3,'road',{name:'postcork'});
-  // 4 · rails above the ocean
-  T.turn(-40,70,22,'road',{name:'climb',float:true});
-  T.straight(18,3,'road',{name:'railstart',float:true});
-  T.straight(150,6,'rail',{name:'rails'});
-  T.straight(40,-24,'road',{name:'raillanding',float:true});
-  // 5 · launch → airborne homing chain → beach
-  T.straight(30,9,'road',{name:'ramp1'},true);
-  T.straight(42,-8,'gap',{name:'chain'});
-  T.straight(40,-1,'road',{name:'beach'});
-  T.turn(50,90,0,'road',{name:'beach2'});
-  // 6 · collapsing bridge → ruins → cave
-  T.straight(46,0,'bridge',{name:'bridge'});
-  T.straight(40,3,'road',{name:'ruins'});
-  T.turn(-35,70,8,'road',{name:'ruins2'});
-  T.straight(110,10,'cave',{name:'cave',float:true});
-  T.straight(20,0,'road',{name:'caveexit',float:true});
-  // 7 · vertical wall run along an asteroid face
-  T.wall(90,1,40);
-  T.straight(30,-2,'road',{name:'postwall',float:true});
-  // 8 · huge waterfall jump
-  T.turn(30,50,6,'road',{name:'sunsetturn'});
-  T.straight(30,10,'road',{name:'ramp2'},true);
-  T.straight(55,-14,'gap',{name:'waterfall'});
-  T.straight(40,-6,'road',{name:'landing2'});
-  // 9 · final sprint to the lighthouse
-  T.turn(-25,70,-3,'road',{name:'sprint'});
-  T.straight(160,-2,'road',{name:'sprint2'});
-  T.straight(60,0,'road',{name:'finish'});
-  T.straight(40,0,'road',{name:'after'});
-  return T;
+const MAPS={
+ tour:{name:'Spooky Forest',tag:'The winding expedition',color:'#83d9ac',art:'maps/wildwood-rush.jpg',order:['forest','desert','sky','loop','space'],turn:1,forest:220,description:'Forest chase → buried temple → rainbow rails',challenge:'Balanced · 2 chases · mummy ambushes'},
+ aurora:{name:'Mysterious Pyramid',tag:'The desert treasure trail',color:'#f3c47d',art:'maps/temple-twist.jpg',order:['desert','loop','forest','space','sky'],turn:-1,forest:250,description:'Desert switchbacks → corkscrew → haunted woods',challenge:'Dodge-heavy · more mummies · crystal detours'},
+ blossom:{name:'Space Travel',tag:'The high-flying mystery',color:'#b9b0ff',art:'maps/starlight-safari.jpg',order:['space','sky','forest','desert','loop'],turn:1,forest:270,description:'Space run → sky bridge → cheetah territory',challenge:'Chase-heavy · longer forest · lantern rewards'},
+};
+function buildTrack(key=mapKey){
+ const config=MAPS[key],T=new Turtle(),turn=config.turn;
+ T.pos.set(0,118,0);T.yaw=0;T.push();
+ function biome(name,fn){const from=T.segs.length;fn();for(let i=from;i<T.segs.length;i++)T.segs[i].meta.biome=name;}
+ biome(key==='aurora'?'desert':'coast',()=>{
+ T.straight(60,-2,'road',{name:'start'});T.turn(-30*turn,60,-16);
+ T.straight(120,-52,'road',{name:'downhill'});T.turn((key==='blossom'?65:45)*turn,80,-18,'road',{name:'dash'});T.straight(50,-6);});
+ const blocks={
+ forest:()=>biome('forest',()=>{T.turn(35*turn,65,0,'road',{name:'forestGate'});T.turn(-55*turn,80,2,'road',{name:'forestBend'});T.straight(config.forest,-2,'road',{name:'forestChase'});T.turn(30*turn,60,0,'road',{name:'forestExit'});}),
+ desert:()=>biome('desert',()=>{T.straight(30,9,'road',{name:'ramp1'},true);T.straight(42,-8,'gap',{name:'chain'});T.straight(60,-1,'road',{name:'beach'});T.turn((key==='aurora'?100:50)*turn,key==='aurora'?125:90,0,'road',{name:'beach2'});T.straight(46,0,'bridge',{name:'bridge'});T.straight(65,3,'road',{name:'ruins'});T.turn((key==='aurora'?-90:-35)*turn,95,8,'road',{name:'ruins2'});}),
+ sky:()=>biome('sky',()=>{T.turn(-40*turn,70,22,'road',{name:'climb',float:true});T.straight(18,3,'road',{name:'railstart',float:true});T.straight(key==='blossom'?195:150,6,'rail',{name:'rails'});T.straight(40,-24,'road',{name:'raillanding',float:true});}),
+ loop:()=>biome(key==='aurora'?'aurora':'blossom',()=>{T.straight(24,0,'road',{name:'preloop'});T.loop(key==='aurora'?20:17);T.straight(30,-2);T.corkscrew(key==='blossom'?145:110,7);T.straight(30,-3,'road',{name:'postcork'});}),
+ space:()=>biome('space',()=>{T.straight(110,10,'cave',{name:'cave',float:true});T.straight(20,0,'road',{name:'caveexit',float:true});T.wall(90,1,40*turn);T.straight(30,-2,'road',{name:'postwall',float:true});})
+ };
+ config.order.forEach(name=>blocks[name]());
+ biome('sunset',()=>{T.turn(30*turn,50,6,'road',{name:'sunsetturn'});T.straight(30,10,'road',{name:'ramp2'},true);T.straight(55,-14,'gap',{name:'waterfall'});T.straight(40,-6,'road',{name:'landing2'});T.turn(-25*turn,70,-3,'road',{name:'sprint'});T.straight(160,-2,'road',{name:'sprint2'});T.straight(60,0,'road',{name:'finish'});T.straight(40,0,'road',{name:'after'});});return T;
 }
 const TR = buildTrack();
 // Frames by parallel transport, plus explicit roll around the tangent
@@ -243,6 +221,7 @@ function skirt(i0,i1,w,depthFn){ // rock wall hanging from road edges away from 
 }
 const depthDefault=i=>{ const N=FR.N[i], y=FR.P[i].y; return N.y>.35? clamp((y+14)/N.y,6,400) : 40; };
 // Build per segment
+const spaceWallMat=new THREE.MeshStandardMaterial({map:TEX.rock,color:0x443269,roughness:.6,metalness:.2});
 const railGroup=new THREE.Group(), bridgePlanks=[], caveGroup=new THREE.Group(); world.add(railGroup,caveGroup);
 for(const s of SEGS){
   const {start:i0,end:i1,type}=s;
@@ -252,7 +231,7 @@ for(const s of SEGS){
     if(type==='loop'||type==='cork'){ world.add(ribbon(i0,i1,()=>ROAD_W+.5,MAT.stoneDark,true,-.35)); world.add(sideRail(i0,i1,-ROAD_W-.2,.6)); world.add(sideRail(i0,i1,ROAD_W+.2,.6)); }
     if(type==='wall') world.add(skirt(i0,i1,ROAD_W,()=>30)); else if(type==='road'&&!s.meta.float) world.add(skirt(i0,i1,ROAD_W,depthDefault));
     if(s.meta.float && type==='road'){ world.add(ribbon(i0,i1,()=>ROAD_W+.6,MAT.slab,true,-.5)); }
-    if(type==='wall') world.add(ribbon(i0,i1,()=>26,MAT.rockPlain,true,-.45));
+    if(type==='wall') world.add(ribbon(i0,i1,()=>26,spaceWallMat,true,-.45));
     if(type==='loop'){ // decorative stone hoop behind the loop
       const c=FR.P[Math.floor((i0+i1)/2)]; const r=s.meta.r; const hoop=new THREE.Mesh(new THREE.TorusGeometry(r+1.2,1.4,10,48),MAT.stone); hoop.position.copy(FR.P[i0]).add(new THREE.Vector3(0,r,0)).addScaledVector(FR.B[i0],-ROAD_W-2.4).addScaledVector(FR.T[i0],0); hoop.lookAt(hoop.position.clone().add(FR.B[i0])); hoop.castShadow=true; world.add(hoop);
       const hoop2=hoop.clone(); hoop2.position.copy(FR.P[i1]).add(new THREE.Vector3(0,r,0)).addScaledVector(FR.B[i0],ROAD_W+2.4); world.add(hoop2);

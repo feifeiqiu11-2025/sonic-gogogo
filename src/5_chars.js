@@ -154,8 +154,9 @@ if(portraitCanvases.length){
     R.legs.L.hip.rotation.x=s1*.5; R.legs.R.hip.rotation.x=s2*.5; R.legs.L.knee.rotation.x=Math.max(0,-s1)*.85; R.legs.R.knee.rotation.x=Math.max(0,-s2)*.85;
     R.arms.L.sh.rotation.x=s2*.45; R.arms.R.sh.rotation.x=s1*.45; R.arms.L.sh.rotation.z=.22; R.arms.R.sh.rotation.z=-.28; R.arms.L.elbow.rotation.x=-.55; R.arms.R.elbow.rotation.x=-.55;
     R.torso.rotation.y=Math.sin(ph)*.05; R.head.rotation.z=.06+Math.sin(t*1.2)*.03; }
+  adventureDisposers.push(()=>{Object.values(portraitRigs).forEach(disposeRunner);pr.dispose();pr.forceContextLoss();});
   let portraitLast=0;
-  (function portraitLoop(ms){ requestAnimationFrame(portraitLoop);
+  (function portraitLoop(ms){ if(disposed)return;requestAnimationFrame(portraitLoop);
     if(document.getElementById('start').hidden||document.hidden||ms-portraitLast<40) return; portraitLast=ms; const t=ms/1000;
     for(const key of ['sonic','tails','knuckles']){ const targets=portraitsByKey[key]; if(!targets.length) continue; const rig=portraitRigs[key]; posePortrait(key,t);
       ps.add(rig); pr.render(ps,pc); ps.remove(rig);

@@ -170,16 +170,16 @@ class StepSignal{ constructor(){ this.events=[]; this.ext=null; this.extT=0; thi
   rate(t){ const n=this.events.filter(x=>t-x<1.4).length; return n>=2? n/1.4 : 0; } // extremes per second
 }
 const bodies=[new Body(),new Body(),new Body()];
-const newKeys=()=>({l:false,r:false,jump:false,squat:false,up:false,out:false,fast:false,jumpEdge:false});
+const newKeys=()=>({l:false,r:false,jump:false,squat:false,up:false,out:false,fast:false,jumpEdge:false,punch:false,kick:false,punchEdge:false,kickEdge:false});
 const KEY=newKeys(), KEYS=[KEY,newKeys(),newKeys()];
 // Dedicated key clusters allow three people to play together on one keyboard.
-const KEYMAP=[{a:'l',d:'r',w:'jump',s:'squat',q:'up',e:'out',Shift:'fast',' ':'jump'},
- {j:'l',l:'r',i:'jump',k:'squat',u:'up',o:'out',h:'fast'},
- {ArrowLeft:'l',ArrowRight:'r',ArrowUp:'jump',ArrowDown:'squat',Enter:'up','/':'out','.':'fast'}];
+const KEYMAP=[{a:'l',d:'r',w:'jump',s:'squat',q:'up',e:'out',Shift:'fast',' ':'jump',f:'punch',g:'kick'},
+ {j:'l',l:'r',i:'jump',k:'squat',u:'up',o:'out',h:'fast',n:'punch',m:'kick'},
+ {ArrowLeft:'l',ArrowRight:'r',ArrowUp:'jump',ArrowDown:'squat',Enter:'up','/':'out','.':'fast','[':'punch',']':'kick'}];
 function keyEvent(e,down){const key=e.key.length===1?e.key.toLowerCase():e.key;
  if(key==='Escape'&&down&&!e.repeat){togglePause();return;}
  for(let i=0;i<3;i++){const action=KEYMAP[i][key];if(!action)continue; const target=S.players===1?KEY:KEYS[i];
- if(action==='jump'&&down&&!target.jump)target.jumpEdge=true;target[action]=down;e.preventDefault();}}
+ if(['jump','punch','kick'].includes(action)&&down&&!target[action])target[action+'Edge']=true;target[action]=down;e.preventDefault();}}
 addEventListener('keydown',e=>keyEvent(e,true));addEventListener('keyup',e=>keyEvent(e,false));
 function clearKeys(){KEYS.forEach(k=>Object.assign(k,newKeys()));}
 addEventListener('blur',()=>{clearKeys();if(S.phase==='run')togglePause();});
@@ -210,8 +210,9 @@ function poseLoop(){
     if(id!==poseLoopId) return;
     if(landmarker && camOn && video.readyState>=2 && video.currentTime!==lastVideoTime){
       lastVideoTime=video.currentTime;
-      try{ poseResult=landmarker.detectForVideo(video,performance.now()); }catch(e){}
+      try{ poseResult=landmarker.detectForVideo(video,performance.now()); }catch(e){poseResult=null;}
       assignPoses(poseResult, now());
+      updateCombatTracking(now());
     }
     requestAnimationFrame(step);
   };
@@ -245,4 +246,56 @@ function drawSkeleton(ctx,W,H,withVideo){
     // pace meter (mirrored canvas, so draw the text flipped back)
     ctx.save(); ctx.scale(-1,1); ctx.fillStyle='rgba(0,0,0,.5)'; ctx.fillRect(-W+8,H-34,110,26); ctx.fillStyle='#fff'; ctx.font='bold 15px Nunito,sans-serif'; ctx.fillText(`pace ${b.cadence.toFixed(1)}/s`,-W+14,H-15); ctx.restore();
   });
+}
+
+
+// Context-only combat recognition. The established Body cadence/gesture detector stays untouched.
+class CombatSignal {
+ constructor(){this.reset();}
+ reset(){this.active=false;this.started=0;this.lastT=0;this.punchEdge=false;this.kickEdge=false;this.lastPunch=-9;this.lastKick=-9;this.arms=[{},{}];this.legs=[{},{}];this.baseAnkles=[null,null];this.hips=null;this.hint='Hands at chest, then punch';}
+ take(){const out={punch:this.punchEdge,kick:this.kickEdge,hint:this.hint};this.punchEdge=this.kickEdge=false;return out;}
+ update(lm,t,active){
+  if(!active){this.reset();return;}
+  if(!this.active){this.reset();this.active=true;this.started=t;}
+  const dt=this.lastT?clamp(t-this.lastT,.005,.1):1/30;this.lastT=t;
+  const valid=ids=>lm&&ids.every(i=>lm[i]&&Number.isFinite(lm[i].x)&&Number.isFinite(lm[i].y)&&(lm[i].visibility??1)>.55);
+  if(!valid([11,12,23,24])){this.punchEdge=this.kickEdge=false;this.arms=[{},{}];this.legs=[{},{}];this.hint='Step into view';return;}
+  const hipY=(lm[23].y+lm[24].y)/2,shY=(lm[11].y+lm[12].y)/2;
+  const torso=Math.max(.08,Math.hypot((lm[11].x+lm[12].x-lm[23].x-lm[24].x)/2,shY-hipY));
+  const d=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,(a.z??0)-(b.z??0))/torso;
+  const angle=(a,b,c)=>{const u=[a.x-b.x,a.y-b.y,(a.z??0)-(b.z??0)],v=[c.x-b.x,c.y-b.y,(c.z??0)-(b.z??0)];return Math.acos(clamp(u.reduce((s,x,i)=>s+x*v[i],0)/(Math.hypot(...u)*Math.hypot(...v)||1),-1,1))*180/Math.PI;};
+  this.hips??=hipY;const settled=Math.abs(hipY-this.hips)/torso<.28;
+  const legsVisible=valid([25,26,27,28]);this.hint=legsVisible?'Punch, return hands • knee up, kick, foot down':'Step back until both feet are visible';
+  for(let i=0;i<2;i++){
+   const sh=11+i,el=13+i,wr=15+i,a=this.arms[i];
+   if(!valid([sh,el,wr])){this.arms[i]={};continue;}
+   const reach=d(lm[sh],lm[wr]),bend=angle(lm[sh],lm[el],lm[wr]);
+   const chest=(lm[wr].y-shY)/torso>-.22&&(lm[wr].y-shY)/torso<.8;
+   const speed=a.reach===undefined?0:(reach-a.reach)/dt;a.reach=reach;
+   if(chest&&bend<125&&reach<1.05){a.guard=(a.guard||0)+dt;if(a.guard>.08)a.armed=true;}else a.guard=0;
+   if(a.armed&&chest&&settled&&bend>145&&reach>1.02&&speed>1.25&&t-this.started>.35&&t-this.lastPunch>.35){this.punchEdge=true;this.lastPunch=t;a.armed=false;}
+  }
+  if(!legsVisible){this.legs=[{},{}];return;}
+  for(let i=0;i<2;i++){
+   const hip=23+i,knee=25+i,ankle=27+i,other=28-i,l=this.legs[i],a=lm[ankle];
+   const bend=angle(lm[hip],lm[knee],a),lift=(hipY-lm[knee].y)/torso;
+   if(a.y>hipY+.85*torso&&lift<-.35){this.baseAnkles[i]=this.baseAnkles[i]===null?a.y:Math.max(this.baseAnkles[i]-.005*torso,a.y);l.down=(l.down||0)+dt;if(l.down>.1){l.ready=true;l.chamber=false;}}else l.down=0;
+   const base=this.baseAnkles[i],support=this.baseAnkles[1-i];
+   const planted=support!==null&&Math.abs(lm[other].y-support)/torso<.25;
+   if(l.ready&&planted&&lift>-.2&&bend<135){l.chamber=true;l.chamberT=t;}
+   if(l.chamber&&t-l.chamberT>1.8)l.chamber=false;
+   if(l.chamber&&planted&&settled&&base!==null&&(base-a.y)/torso>.5&&bend>145&&lift>-.25&&t-this.lastKick>.5){this.kickEdge=true;this.lastKick=t;l.ready=false;l.chamber=false;}
+  }
+ }
+}
+const combatSignals=[new CombatSignal(),new CombatSignal(),new CombatSignal()];
+function updateCombatTracking(t){combatSignals.forEach((signal,i)=>{const b=bodies[i];signal.update(b.seen&&t-b.lastSeen<.2?b.lm:null,t,!!activeAdventure?.needsCombat(i));});}
+
+// Camera/input state outlives a map. Rebuild the scene only before camera activation.
+let activeAdventure=null;
+function togglePause(){activeAdventure?.pause();}
+function stopCamera(){activeAdventure?.stopCamera();}
+function mountAdventure(key){
+ activeAdventure?.dispose();S.destination=key;S.phase='start';
+ activeAdventure=createAdventure(key);return activeAdventure;
 }
