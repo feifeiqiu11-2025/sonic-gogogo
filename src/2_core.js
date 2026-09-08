@@ -221,8 +221,11 @@ function poseLoop(){
 function assignPoses(res,t){
   const lms=(res&&res.landmarks)||[];
   if(S.players===1){ bodies[0].update(lms[0]||null,t); return; }
+  // Reject ghost and duplicate detections before slot assignment — a hallucinated pose stealing a
+  // slot corrupts that racer's cadence every other frame. Keep the most visible, distinct bodies.
+  let cands=lms.map(l=>({l,x:(l[23].x+l[24].x+l[11].x+l[12].x)/4,v:Math.min(l[11].visibility??1,l[12].visibility??1,l[23].visibility??1,l[24].visibility??1)})).filter(c=>c.v>=.4).sort((a,b)=>b.v-a.v);
+  cands=cands.filter((c,i)=>!cands.slice(0,i).some(d=>Math.abs(d.x-c.x)<.06)).slice(0,S.players).sort((a,b)=>b.x-a.x);
   // Globally minimize assignment cost (at most 3! possibilities). Retain slots when a person drops out.
-  const cands=lms.slice(0,S.players).map(l=>({l,x:(l[23].x+l[24].x+l[11].x+l[12].x)/4})).sort((a,b)=>b.x-a.x);
   let best=Infinity,chosen=[];
   function match(j,used,slots,cost){if(j===cands.length){if(cost<best){best=cost;chosen=slots.slice();}return;}
     for(let i=0;i<S.players;i++){if(used.includes(i))continue;const body=bodies[i];
@@ -266,25 +269,32 @@ class CombatSignal {
   const angle=(a,b,c)=>{const u=[a.x-b.x,a.y-b.y,(a.z??0)-(b.z??0)],v=[c.x-b.x,c.y-b.y,(c.z??0)-(b.z??0)];return Math.acos(clamp(u.reduce((s,x,i)=>s+x*v[i],0)/(Math.hypot(...u)*Math.hypot(...v)||1),-1,1))*180/Math.PI;};
   this.hips??=hipY;const settled=Math.abs(hipY-this.hips)/torso<.28;
   const legsVisible=valid([25,26,27,28]);this.hint=legsVisible?'Punch, return hands • knee up, kick, foot down':'Step back until both feet are visible';
+  // Punch: guard at chest, then a clear extension. A forward jab at the camera barely grows in 2D,
+  // so a fast z-thrust of the wrist also counts once the arm is armed.
   for(let i=0;i<2;i++){
    const sh=11+i,el=13+i,wr=15+i,a=this.arms[i];
    if(!valid([sh,el,wr])){this.arms[i]={};continue;}
    const reach=d(lm[sh],lm[wr]),bend=angle(lm[sh],lm[el],lm[wr]);
-   const chest=(lm[wr].y-shY)/torso>-.22&&(lm[wr].y-shY)/torso<.8;
+   const chest=(lm[wr].y-shY)/torso>-.35&&(lm[wr].y-shY)/torso<.95;
    const speed=a.reach===undefined?0:(reach-a.reach)/dt;a.reach=reach;
-   if(chest&&bend<125&&reach<1.05){a.guard=(a.guard||0)+dt;if(a.guard>.08)a.armed=true;}else a.guard=0;
-   if(a.armed&&chest&&settled&&bend>145&&reach>1.02&&speed>1.25&&t-this.started>.35&&t-this.lastPunch>.35){this.punchEdge=true;this.lastPunch=t;a.armed=false;}
+   const zRel=((lm[wr].z??0)-(lm[sh].z??0))/torso;const zSpeed=a.z===undefined?0:(a.z-zRel)/dt;a.z=zRel;
+   if(chest&&bend<135&&reach<1.15){a.guard=(a.guard||0)+dt;if(a.guard>.08)a.armed=true;}else a.guard=0;
+   if(a.armed&&chest&&settled&&t-this.started>.35&&t-this.lastPunch>.35&&((bend>132&&reach>.92&&speed>.85)||(zSpeed>1.5&&reach>.72&&bend>110))){this.punchEdge=true;this.lastPunch=t;a.armed=false;}
   }
   if(!legsVisible){this.legs=[{},{}];return;}
+  // Kick: plant, raise the knee, then swing the foot up/forward. Front kicks toward the camera
+  // register through the ankle's z-thrust; no straight-leg requirement.
   for(let i=0;i<2;i++){
    const hip=23+i,knee=25+i,ankle=27+i,other=28-i,l=this.legs[i],a=lm[ankle];
    const bend=angle(lm[hip],lm[knee],a),lift=(hipY-lm[knee].y)/torso;
+   const zRel=((a.z??0)-(lm[hip].z??0))/torso;const zSpeed=l.z===undefined?0:(l.z-zRel)/dt;l.z=zRel;
    if(a.y>hipY+.85*torso&&lift<-.35){this.baseAnkles[i]=this.baseAnkles[i]===null?a.y:Math.max(this.baseAnkles[i]-.005*torso,a.y);l.down=(l.down||0)+dt;if(l.down>.1){l.ready=true;l.chamber=false;}}else l.down=0;
    const base=this.baseAnkles[i],support=this.baseAnkles[1-i];
-   const planted=support!==null&&Math.abs(lm[other].y-support)/torso<.25;
-   if(l.ready&&planted&&lift>-.2&&bend<135){l.chamber=true;l.chamberT=t;}
-   if(l.chamber&&t-l.chamberT>1.8)l.chamber=false;
-   if(l.chamber&&planted&&settled&&base!==null&&(base-a.y)/torso>.5&&bend>145&&lift>-.25&&t-this.lastKick>.5){this.kickEdge=true;this.lastKick=t;l.ready=false;l.chamber=false;}
+   const planted=support!==null&&Math.abs(lm[other].y-support)/torso<.45;
+   if(l.ready&&planted&&lift>-.32&&bend<150){l.chamber=true;l.chamberT=t;}
+   if(l.chamber&&t-l.chamberT>2.5)l.chamber=false;
+   const raised=base!==null?(base-a.y)/torso:0;
+   if(l.chamber&&planted&&settled&&t-this.lastKick>.5&&((raised>.3&&bend>115&&lift>-.4)||(zSpeed>1.3&&raised>.12&&lift>-.35))){this.kickEdge=true;this.lastKick=t;l.ready=false;l.chamber=false;}
   }
  }
 }

@@ -70,10 +70,22 @@ function updateEncounterVisuals(time){for(const p of players){
  for(const e of p.encounters||[]){if(!e.mesh)continue;const dist=e.t-p.t;e.mesh.visible=dist<88&&dist>-12;
   if(!e.mesh.visible)continue;const lane=racerBand(p).center+e.bias,f=frameAt(e.t);e.mesh.position.copy(worldAt(e.t,lane,-2*(1-smoothstep(75,38,dist))));e.mesh.quaternion.setFromRotationMatrix(M4.makeBasis(f.B.clone().negate(),f.N,f.T));e.mesh.rotateY(Math.PI);e.mesh.userData.arms.forEach((a,i)=>a.rotation.x=Math.sin(time*3+i)*.13);}
  const e=p.encounter;if(!e)continue;const combat=e.type==='combat',retreat=e.type==='retreat',t=combat?p.t+2.7:p.t-(retreat?8+e.age*10:Math.max(1,e.gap));const f=frameAt(t);e.mesh.position.copy(worldAt(t,p.lane,combat?0:Math.abs(Math.sin(time*13))*.1));e.mesh.quaternion.setFromRotationMatrix(M4.makeBasis(f.B.clone().negate(),f.N,f.T));if(combat)e.mesh.rotateY(Math.PI);
- e.mesh.userData.legs.forEach((l,i)=>l.rotation.x=combat?Math.sin(time*2+i)*.08:Math.sin(time*15+i%2*Math.PI+(i>1?.8:0))*.8);e.mesh.userData.tail.rotation.y=Math.sin(time*7)*.3;e.mesh.userData.head.rotation.z=Math.sin(time*3)*.06;e.mesh.scale.setScalar(retreat?Math.max(.05,1-e.age*.65):1);if(combat)e.mesh.position.addScaledVector(f.T,e.recoil*1.3);
+ e.mesh.userData.legs.forEach((l,i)=>l.rotation.x=combat?Math.sin(time*4.5+i*1.7)*.22:Math.sin(time*15+i%2*Math.PI+(i>1?.8:0))*.8);e.mesh.userData.tail.rotation.y=Math.sin(time*(combat?9:7))*(combat?.5:.3);e.mesh.userData.head.rotation.z=Math.sin(time*3)*.06;e.mesh.scale.setScalar(retreat?Math.max(.05,1-e.age*.65):1);
+ if(combat){e.mesh.position.addScaledVector(f.T,e.recoil*1.6);e.mesh.userData.body.rotation.x=-.08+Math.sin(time*3.3)*.06-e.recoil*.9;e.mesh.userData.head.rotation.x=Math.sin(time*2.7)*.1+e.recoil*.8;}else e.mesh.userData.body.rotation.x=0;
 }}
-function poseCombatHero(p){if(p.encounter?.type!=='combat')return;const R=p.rig.userData.rig;R.arms.L.sh.rotation.x=-.9;R.arms.R.sh.rotation.x=-.9;R.arms.L.elbow.rotation.x=-1.3;R.arms.R.elbow.rotation.x=-1.3;
- if(p.combatAnim>0){if(p.combatMove==='punch'){R.arms.R.sh.rotation.x=-1.65;R.arms.R.elbow.rotation.x=-.12;}else{R.legs.R.hip.rotation.x=-1.25;R.legs.R.knee.rotation.x=.15;}}}
+// Fighting stance owns the whole pose (runs after animateNinja): a bouncy guard, then
+// wind-up/strike/return arcs for punches and kicks driven by combatAnim.
+function poseCombatHero(p,time){if(p.encounter?.type!=='combat')return;const R=p.rig.userData.rig;
+ const w=Math.sin(time*6.5),bounce=Math.abs(w);
+ const hipsY=R.hips.userData.y??(R.hips.userData.y=R.hips.position.y);
+ R.hips.position.y=hipsY-.1+bounce*.07;
+ R.torso.rotation.set(.14,.3+w*.06,0);R.head.rotation.set(-.1,-.22,0);
+ R.legs.L.hip.rotation.x=-.28;R.legs.R.hip.rotation.x=.1;R.legs.L.knee.rotation.x=.5;R.legs.R.knee.rotation.x=.35;
+ R.arms.L.sh.rotation.x=-.95+w*.08;R.arms.R.sh.rotation.x=-.85-w*.08;R.arms.L.sh.rotation.z=.3;R.arms.R.sh.rotation.z=-.3;
+ R.arms.L.elbow.rotation.x=-1.5;R.arms.R.elbow.rotation.x=-1.5;
+ if(p.combatAnim>0){const dur=p.combatMove==='punch'?.28:.4,s=Math.sin(Math.min(1,(1-p.combatAnim/dur)*1.15)*Math.PI);
+  if(p.combatMove==='punch'){R.torso.rotation.y=.3-s*.75;R.arms.R.sh.rotation.x=-.85-s*.95;R.arms.R.sh.rotation.z=-.1;R.arms.R.elbow.rotation.x=-1.5+s*1.42;R.hips.position.y=hipsY-.1+s*.05;}
+  else{R.torso.rotation.set(.14-s*.3,.3-s*.35,0);R.legs.R.hip.rotation.x=.1-s*1.5;R.legs.R.knee.rotation.x=.35+(1-s)*.9;R.legs.L.knee.rotation.x=.5+s*.25;R.hips.position.y=hipsY-.1+s*.1;R.arms.L.sh.rotation.z=.3+s*.5;R.arms.R.sh.rotation.z=-.3-s*.5;}}}
 
 function updateChallengeHUD(){for(const p of players){const el=$('challenge'+p.idx),e=p.encounter;let html='';
  if(e?.type==='combat'){const dots=n=>Array.from({length:3},(_,i)=>`<i class="${i<n?'lit':''}"></i>`).join('');html=`<strong>${p.hero.name} · CHEETAH SHOWDOWN</strong><div class="combat-meter"><span>PUNCH ${dots(e.punches)}</span><span>KICK ${dots(e.kicks)}</span></div><p>${e.hint||'Hands at chest. Punch and return. Lift knee, kick, foot down.'}</p>`;el.className='challenge-card combat';}

@@ -237,7 +237,7 @@ function placePlayer(p,time,dt){
   const pitch=new THREE.Quaternion().setFromAxisAngle(f.B, p.air?clamp(-p.vh*.02,-.35,.35):0);
   _q.premultiply(bank).premultiply(pitch);
   p.rig.quaternion.slerp(_q,1-Math.exp(-14*dt));
-  animateNinja(p.rig,p,dt);poseCombatHero(p);
+  animateNinja(p.rig,p,dt);poseCombatHero(p,time);
   p.aura.material.opacity=damp(p.aura.material.opacity,p.boosting?.45:0,8,dt); p.aura.scale.set(1,1,lerp(.6,1.6,p.speedNorm)); p.aura.rotation.z+=dt*6;
   p.trail.material.opacity=damp(p.trail.material.opacity,(p.speed>24&&!p.air)?.22:0,6,dt); p.trail.scale.y=lerp(.5,1.4,p.speedNorm);
   // buddy runs alongside
